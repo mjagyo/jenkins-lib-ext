@@ -1,5 +1,5 @@
 <a href="https://jenkins.io">
-    <img width="400" src="https://www.jenkins.io/images/jenkins-logo-title-dark.svg" alt="Jenkins logo"> 
+    <img width="400" src="https://www.jenkins.io/images/jenkins-logo-title-dark.png" alt="Jenkins logo"> 
 </a>
 
 This Jenkins Library extension provides a collection of reusable functions and pipelines for streamlining CI/CD workflows. Designed to enhance the capabilities of Jenkins pipelines, this library offers ready-to-use components for common tasks in software development and DevOps processes.
