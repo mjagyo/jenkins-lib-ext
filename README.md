@@ -14,7 +14,7 @@ This Jenkins Library extension provides a collection of reusable functions and p
 ## Installation
 
 1.  Install [Git](https://git-scm.com/) if you haven't already.
-1.  Install the [VS Code Go extension]().
+1.  Install the [VS Code Go extension](https://marketplace.visualstudio.com/items?itemName=JenkinsLibrarySimplified.jlib&ssr=false#review-details).
 
 ## Quick Start
 1. `CTRL`+`SHIFT`+`P` then select `Library Clone Repository` it will clone the jenkins library to extensions folder, provide the details needed.
