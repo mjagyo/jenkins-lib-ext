@@ -46,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 const match = functionNameRegex.exec(line);
                 if (match) {
                     const functionName = match[1];
-                    const filePath = folderPath+"\\"+functionName+".groovy"; // Replace this with the actual file path
+                    const filePath = folderPath+"/"+functionName+".groovy"; // Replace this with the actual file path
 
                     // Read the content of the file
                     const fileContent = await readFile(filePath);
@@ -55,24 +55,39 @@ export async function activate(context: vscode.ExtensionContext) {
                     const callFunctionArguments = extractCallFunctionArguments(fileContent);
                     const argumentsDocumentation = extractArgumentsDocumentation(fileContent);
                     const usageDocumentation = extractUsageDocumentation(fileContent);
+                    let functionNamePosition = new vscode.Position(position.line, match.index);
+
+                    let markdownContent: string = "";
+                    let markdownUsageContent: any = "";
+                    let markdownInformationContent: string = "";
 
                     const char = document.getText(new vscode.Range(position, position.translate(0, 1)));
                     if (char === '(') {
-                        let markdownContent = '### Arguments\n\n';
+                        markdownContent = '### Arguments\n\n';
                         argumentsDocumentation.map(args => {
                             markdownContent += `- **${args["name"]}**: ${args["definition"].trim()}\n`;
                         });
-                        let markdownUsageContent = '### Usage\n\n';
-                        markdownUsageContent += `<span>${usageDocumentation}</span>\n`;
-                        let markdownInformationContent = '### Information\n\n';
+                        markdownUsageContent = '### Usage\n\n';
+                        markdownUsageContent += `${usageDocumentation}\n`;
+                        markdownInformationContent = '### Information\n\n';
                         markdownInformationContent += `${functionName}(${callFunctionArguments.join(', ')})`;
-
-                        const functionNamePosition = new vscode.Position(position.line, match.index);
 
                         if (position.isAfterOrEqual(functionNamePosition) && position.isBeforeOrEqual(functionNamePosition.translate(0, functionName.length))) {
                             // Provide hover information for the function name
                             return new vscode.Hover(`${markdownContent}\n---\n${markdownUsageContent}\n---\n${markdownInformationContent}`);
                         }
+                    }
+
+                    if (position.isAfterOrEqual(functionNamePosition) && position.isBeforeOrEqual(functionNamePosition.translate(0, functionName.length))) {
+                        const openFileCmdURI = vscode.Uri.parse(
+                          `command:jenkins-library.openFile?${encodeURIComponent(JSON.stringify(filePath))}`
+                        );
+
+                        let markdown = new vscode.MarkdownString();
+                        markdown.appendMarkdown(`[Open ${functionName}.groovy](${openFileCmdURI})`);
+                        markdown.isTrusted = true;
+
+                        return new vscode.Hover(markdown);
                     }
                 }
                 return null;
@@ -155,7 +170,26 @@ export async function activate(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage('Please provide the branch name.');
         }
     });
+
     context.subscriptions.push(repositoryManager);
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('jenkins-library.openFile', (fileName: string) => {
+            console.log("Received fileName:", fileName); // Debugging statement
+    
+            // Check if fileName is undefined
+            if (fileName === undefined) {
+                return;
+            }
+        
+            vscode.workspace.openTextDocument(fileName).then(doc => {
+                vscode.window.showTextDocument(doc);
+            }, err => {
+                console.error(err);
+                vscode.window.showErrorMessage(`Error opening ${fileName}: ${err}`);
+            });
+        })
+    );
 }
 
 function extractUsageDocumentation(fileContent: string): string {
@@ -186,20 +220,6 @@ function extractArgumentsDocumentation(fileContent: string): { name: string; def
     }
 
     return argumentsList;
-}
-
-function parseComment(commentContent: string): { [arg: string]: string } {
-    const argRegex = /\s+(\w+)\s*-\s*(.*?)(?=\s+\w+\s*-\s*|$)/g;
-    const argumentsDocumentation: { [arg: string]: string } = {};
-
-    let match: RegExpExecArray | null;
-    while ((match = argRegex.exec(commentContent)) !== null) {
-        const argName = match[1];
-        const argDescription = match[2];
-        argumentsDocumentation[argName] = argDescription.trim();
-    }
-
-    return argumentsDocumentation;
 }
 
 function extractCallFunctionArguments(fileContent: string): string[] {
@@ -258,6 +278,23 @@ function readFile(filePath: string): Promise<string> {
             }
         });
     });
+}
+
+function extractFunctionArguments(document: vscode.TextDocument, range: vscode.Range): string {
+    // Assuming the function call is within the same line
+    const line = document.lineAt(range.start.line);
+    const lineText = line.text;
+
+    // Extract the arguments from the function call
+    const startIndex = lineText.indexOf('(', range.start.character);
+    const endIndex = lineText.indexOf(')', startIndex);
+
+    if (startIndex !== -1 && endIndex !== -1) {
+        const argsText = lineText.substring(startIndex + 1, endIndex);
+        return argsText;
+    }
+
+    return '';
 }
 
 // This method is called when your extension is deactivated
