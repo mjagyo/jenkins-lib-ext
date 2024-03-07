@@ -2,7 +2,7 @@
   "name": "jlib",
   "displayName": "Jenkins Library",
   "description": "The Jenkins Library Support extension provides enhanced capabilities for managing Jenkins libraries directly from Visual Studio Code. \nWith this extension, users can seamlessly interact with Jenkins libraries, enabling smoother development workflows and improved integration with Jenkins pipelines.",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "publisher": "JenkinsLibrarySimplified",
   "repository": {
     "type": "git",
